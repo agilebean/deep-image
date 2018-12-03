@@ -16,15 +16,15 @@ def load_keras_model(model_label):
     return model
 
 model_labels = [ 'VGG16',
-                 'VGG19',
-                 'ResNet50',
-                 'InceptionV3',
-                 'Xception',
-                 'MobileNet',
-                 'MobileNetV2',
-                 'NASNetMobile',
-                 'DenseNet201',
-                 'InceptionResNetV2'
+                 'VGG19'#,
+                 #'ResNet50',
+                 #'InceptionV3',
+                 #'Xception',
+                 #'MobileNet',
+                 #'MobileNetV2',
+                 #'NASNetMobile',
+                 #'DenseNet201',
+                 #'InceptionResNetV2'
                ]
 
 models = [ load_keras_model(model_label) for model_label in model_labels ]

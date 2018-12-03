@@ -119,6 +119,7 @@ def predict_image(image_path, model) -> str:
     else:
         img = model_preprocess_input(img)
     print("image preprocessed")
+    #pdb.set_trace()
 
     # predict the probability across all output classes
     predictions = model.predict(img)
@@ -190,10 +191,9 @@ if (__name__ == '__main__'):
     print('* Loading Keras models and starting Flask server...')
     print('.....')
     # get wsgi server to replace flask app.run()
-    #from gevent.pywsgi import WSGIServer
-    #web_server = WSGIServer(('', 5000), app)
-    #web_server.serve_forever()
-    app.run(host='0.0.0.0')
+    from gevent.pywsgi import WSGIServer
+    web_server = WSGIServer(('', 5000), app)
+    web_server.serve_forever()
 
     print('Success! Server available at http://127.0.0.1:5000')
 
