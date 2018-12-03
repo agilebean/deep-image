@@ -1,0 +1,21 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!app.py
+!mymodels.py
+!base.html
+!index.html
+!main.css
+!main.js
+!README.md
+
+# ...even if they are in subdirectories
+!*/
+
+# if the files to be tracked are in subdirectories
+!*/templates/base.html
+!*/templates/index.html
+!*/static/css/main.css
+!*/static/js/main.js
