@@ -30,96 +30,50 @@ import mymodels
 # create Flask app
 app = Flask(__name__)
 
-def get_model_data(model):
-    print('***** model name ' + model.name)
-    if (model.name == 'vgg16'):
-        model_preprocess_input = vgg16.preprocess_input
-        model_decode_predictions = vgg16.decode_predictions
-        image_size = 224
-        top1_acc = '71.5'
-        top5_acc = '90.1'
-    elif (model.name == 'vgg19'):
-        model_preprocess_input = vgg19.preprocess_input
-        model_decode_predictions = vgg19.decode_predictions
-        image_size = 224
-        top1_acc = '72.7'
-        top5_acc = '91.0'
-    elif (model.name == 'resnet50'):
-        model_preprocess_input = resnet50.preprocess_input
-        model_decode_predictions = resnet50.decode_predictions
-        image_size = 224
-        top1_acc = '75.9'
-        top5_acc = '92.9'
-    elif (model.name == 'inception_v3'):
-        model_preprocess_input = inception_v3.preprocess_input
-        model_decode_predictions = inception_v3.decode_predictions
-        image_size = 299
-        top1_acc = '78.8'
-        top5_acc = '94.4'
-    elif (model.name == 'xception'):
-        model_preprocess_input = xception.preprocess_input
-        model_decode_predictions = xception.decode_predictions
-        image_size = 299
-        top1_acc = '79.0'
-        top5_acc = '94.5'
-    elif (model.name == 'mobilenet_1.00_224'):
-        #model.name = 'mobilenet'
-        model_preprocess_input = mobilenet.preprocess_input
-        model_decode_predictions = mobilenet.decode_predictions
-        image_size = 224
-        top1_acc = '70.6' # Source: https://arxiv.org/pdf/1704.04861.pdf
-        top5_acc = '87.1'
-    elif (model.name == 'densenet201'):
-        model_preprocess_input = densenet.preprocess_input
-        model_decode_predictions = densenet.decode_predictions
-        image_size = 224
-        top1_acc = '77.0'
-        top5_acc = '93.3'
-    elif (model.name == 'NASNet'):
-        model_preprocess_input = inception_resnet_v2.preprocess_input
-        model_decode_predictions = inception_resnet_v2.decode_predictions
-        image_size = 224
-        top1_acc = '74.0' # Source: https://github.com/tensorflow/models/tree/master/research/slim/nets/nasnet
-        top5_acc = '91.6' # Source: dito
-    elif (model.name == 'inception_resnet_v2'):
-        model_preprocess_input = inception_resnet_v2.preprocess_input
-        model_decode_predictions = inception_resnet_v2.decode_predictions
-        image_size = 299
-        top1_acc = '80.1' # 80.4
-        top5_acc = '95.1' # 95.3
-    elif (model.name == 'mobilenetv2_1.00_224'):
-        model_preprocess_input = inception_resnet_v2.preprocess_input
-        model_decode_predictions = inception_resnet_v2.decode_predictions
-        image_size = 224
-        top1_acc = '71.8' #Source: https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet
-        top5_acc = '91.0' # Source: dito
-    
-    return (top1_acc, top5_acc, model_preprocess_input, model_decode_predictions, image_size)
 
-def predict_image(image_path, model) -> str:
+def upload_image(request):
+    # Get the file from post request
+    file = request.files['file']
+
+    # Save the file to ./uploads
+    basepath = os.path.dirname(__file__)
+    image_path = os.path.join(basepath, 'uploads', secure_filename(file.filename))
+    file.save(image_path)
+
+    return image_path
+
+
+@app.route('/', methods = ['GET'])
+def show_index():
+    print('*** entered homepage')
+    return render_template('index.html')
+
+
+def predict_image(image_path, model_label, model_dict) -> str:
     tic = time()
-    model_name = model.name
-    print("*** entered predict_image() by " + model_name)
-    
-    ( top1_acc, top5_acc,
-    model_preprocess_input, 
-    model_decode_predictions, 
-    image_size ) = get_model_data(model)
+    print("*** entered predict_image() for " + model_label)
 
-    image_input = image.load_img(image_path, target_size = (image_size, image_size))
+    # Get model-specific metadata and functions from model dictionary
+    image_size = model_dict['image_size']
+    top1_acc = model_dict['top1_acc']
+    top5_acc = model_dict['top5_acc']
+    model_preprocess_input = model_dict['model_preprocess_input']
+    model_decode_predictions = model_dict['model_decode_predictions']
+
+    model = model_dict['model_instance']
+    model_name = model.name
+
+    image_input = image.load_img(image_path, target_size=(image_size, image_size))
 
     # read image input
     img = image.img_to_array(image_input)
+
     # reshape data for the model
     img = np.expand_dims(img, axis=0)
-    # prepare the image for the models
 
-    if (model_name == 'resnet50'):
-        img = model_preprocess_input(img, mode='caffe')
-    else:
-        img = model_preprocess_input(img)
+    # prepare the image for the models
+    img = model_preprocess_input(img)
     print("image preprocessed")
-    #pdb.set_trace()
 
     # predict the probability across all output classes
     predictions = model.predict(img)
@@ -132,69 +86,59 @@ def predict_image(image_path, model) -> str:
     # retrieve the most likely result, e.g. highest probability
     label = label[0][0]
 
-    toc = time()
-    processing_time = toc-tic
-    print("Image classified by %s in >> %.2f s" % (model_name, processing_time))
+    # get classification confidence (%)
+    confidence = '%.2f' % (label[2] * 100)
 
-    classification = ( model_name, top1_acc, top5_acc, processing_time, label[2]*100, label[1] )
+    toc = time()
+    processing_time = '%.2fs' % (toc-tic)
+    print("Image classified by %s in >> %s" % (model_name, processing_time))
+
+    classification = (model_name, top1_acc, top5_acc, processing_time, confidence, label[1])
     print("image classified >> " + str(classification))
 
     return classification
 
 
-def upload_image(request):
-    # Get the file from post request
-    f = request.files['file']
-
-    # Save the file to ./uploads
-    basepath = os.path.dirname(__file__)
-    image_path = os.path.join(
-        basepath, 'uploads', secure_filename(f.filename))
-    f.save(image_path)
-    return image_path
-
-
-@app.route('/', methods = ['GET'])
-def show_index():
-    print('entered homepage')
-    return render_template('index.html')
-
-
 @app.route('/predict', methods = ['GET', 'POST'])
-def generate_predictions():
-    print('entered predict image')
+def generate_classifications_output():
+    print('*entered generate_classifications_output()')
 
     if request.method == 'POST':
         tic = time()
         image_path = upload_image(request)
 
-        result = '<table style="width:70%">'
-        result += '<caption>Image Classifications for %s </caption>' % (os.path.basename(image_path))
-        result += '<tr><th>Machine Learning Model</th><th>Top1-Acc</th><th>Top5-Acc</th><th>Time</th><th>Confidence</th><th>Classification</th></tr>'
+        # Create html table for all classifications
+        output = '<table style="width:70%">'
+        output += '<caption>Image Classifications for %s </caption>' % (os.path.basename(image_path))
+        output += '<tr><th>Machine Learning Model</th><th>Top1-Acc</th><th>Top5-Acc</th><th>Time</th><th>Confidence</th><th>Classification</th></tr>'
 
-        content_list = [ predict_image(image_path, model) for model in mymodels.models ]
-        
-        html_content_list = [ '<tr><td> %s </td><td>%s%%</td><td>%s%%</td><td> %.2fs </td><td> %.2f%% </td><td> %s </td></tr>' % (model_name, top1_acc, top5_acc, ptime, confidence, label)
-            for (model_name, top1_acc, top5_acc, ptime, confidence, label) in content_list ]
-        
-        result += '\n'.join(html_content_list)
+        content_list = [ predict_image(image_path, key, values)
+                         for key, values in mymodels.model_data.items() ]
 
-        result += '</table>'
+        html_content_list = [ '<tr><td> %s </td><td>%s%%</td><td>%s%%</td><td> %ss </td><td> %s%% </td><td> %s </td></tr>'
+                              % (model_name, top1_acc, top5_acc, ptime, confidence, label)
+                              for (model_name, top1_acc, top5_acc, ptime, confidence, label) in content_list ]
+
+        output += '\n'.join(html_content_list)
+        output += '</table>'
 
         toc = time()
         print("Total time for all predictions >> %.2f s" % (toc-tic) )
 
-        return result
+        return output
     return None
 
 if (__name__ == '__main__'):
-    print('* Loading Keras models and starting Flask server...')
-    print('.....')
-    # get wsgi server to replace flask app.run()
+
+    print('*** Starting WSGI Server...')
+    print('****************************************************')
+    print('*** Server is available at http://127.0.0.1:5000')
+    print('****************************************************')
+
+    # Get wsgi server to replace flask app.run()
     from gevent.pywsgi import WSGIServer
     web_server = WSGIServer(('', 5000), app)
     web_server.serve_forever()
 
-    print('Success! Server available at http://127.0.0.1:5000')
 
 
