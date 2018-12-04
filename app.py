@@ -112,12 +112,11 @@ def generate_classifications_output():
         output += '<caption>Image Classifications for %s </caption>' % (os.path.basename(image_path))
         output += '<tr><th>Machine Learning Model</th><th>Top1-Acc</th><th>Top5-Acc</th><th>Time</th><th>Confidence</th><th>Classification</th></tr>'
 
-        content_list = [ predict_image(image_path, key, values)
-                         for key, values in mymodels.model_data.items() ]
-
-        html_content_list = [ '<tr><td> %s </td><td>%s%%</td><td>%s%%</td><td> %ss </td><td> %s%% </td><td> %s </td></tr>'
-                              % (model_name, top1_acc, top5_acc, ptime, confidence, label)
-                              for (model_name, top1_acc, top5_acc, ptime, confidence, label) in content_list ]
+        # feed predict_image(model_name, top1_acc, top5_acc, ptime, confidence, label) directly into html
+        html_content_list = [
+            '<tr><td> %s </td><td>%s%%</td><td>%s%%</td><td> %ss </td><td> %s%% </td><td> %s </td></tr>'
+            % predict_image(image_path, key, values)
+            for key, values in mymodels.model_data.items() ]
 
         output += '\n'.join(html_content_list)
         output += '</table>'
