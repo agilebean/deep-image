@@ -1,10 +1,26 @@
+.rowTop {
+  width:100%;
+}
+.columnLeft {
+  width:23%;
+  float:left;
+}
+.columnRight {
+  width:70%;
+  float:right;
+}
+
+h4 {
+    margin-top = 0.2 em;
+}
 table {
     border-spacing: 5px;
-    background-color: lightblue;
+    background-color: #3498db;
 }
 caption {
     font-size: x-large;
-    padding: 10px;
+    padding-top: 0px;
+    padding-bottom: 10px;
     caption-side: top;
 }
 

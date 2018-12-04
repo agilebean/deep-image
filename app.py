@@ -60,6 +60,7 @@ def predict_image(image_path, model_label, model_dict) -> str:
     model_preprocess_input = model_dict['model_preprocess_input']
     model_decode_predictions = model_dict['model_decode_predictions']
 
+    # Get model instance and model name
     model = model_dict['model_instance']
     model_name = model.name
 
@@ -90,10 +91,10 @@ def predict_image(image_path, model_label, model_dict) -> str:
     confidence = '%.2f' % (label[2] * 100)
 
     toc = time()
-    processing_time = '%.2fs' % (toc-tic)
+    processing_time = '%.2f' % (toc-tic)
     print("Image classified by %s in >> %s" % (model_name, processing_time))
 
-    classification = (model_name, top1_acc, top5_acc, processing_time, confidence, label[1])
+    classification = (label[1], model_label, confidence, processing_time, top1_acc, top5_acc)
     print("image classified >> " + str(classification))
 
     return classification
@@ -109,12 +110,12 @@ def generate_classifications_output():
 
         # Create html table for all classifications
         output = '<table style="width:70%">'
-        output += '<caption>Image Classifications for %s </caption>' % (os.path.basename(image_path))
-        output += '<tr><th>Machine Learning Model</th><th>Top1-Acc</th><th>Top5-Acc</th><th>Time</th><th>Confidence</th><th>Classification</th></tr>'
+        output += '<caption>Top10 Machine Learning Models classify <br><em>%s</em> </caption>' % (os.path.basename(image_path))
+        output += '<tr><th>Classification</th><th>Model</th><th>Confidence</th><th>Time</th><th>Top1-Acc</th><th>Top5-Acc</th></tr>'
 
         # feed predict_image(model_name, top1_acc, top5_acc, ptime, confidence, label) directly into html
         html_content_list = [
-            '<tr><td> %s </td><td>%s%%</td><td>%s%%</td><td> %ss </td><td> %s%% </td><td> %s </td></tr>'
+            '<tr><td>%s </td><td>%s</td><td>%s%%</td><td> %ss </td><td> %s%% </td><td> %s%% </td></tr>'
             % predict_image(image_path, key, values)
             for key, values in mymodels.model_data.items() ]
 
@@ -138,6 +139,3 @@ if (__name__ == '__main__'):
     from gevent.pywsgi import WSGIServer
     web_server = WSGIServer(('', 5000), app)
     web_server.serve_forever()
-
-
-

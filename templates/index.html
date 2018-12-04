@@ -1,31 +1,28 @@
 {% extends "base.html" %} {% block content %}
 
-<h3>What's in this image?</h3>
-
 <div>
-    <form id="upload-file" method="post" enctype="multipart/form-data">
-        <label for="imageUpload" class="upload-label">
-            Choose Image...
-        </label>
-        <input type="file" name="file" id="imageUpload" accept=".png, .jpg, .jpeg">
-    </form>
-
-    <div class="image-section" style="display:none;">
-        <div class="img-preview">
-            <div id="imagePreview">
+    <div class="columnLeft">
+        <h4>What's in this image?</h4>
+        <form id="upload-file" method="post" enctype="multipart/form-data">
+            <label for="imageUpload" class="upload-label">
+                Choose Your Image...
+            </label>
+            <input type="file" name="file" id="imageUpload" accept=".png, .jpg, .jpeg">
+        </form>        <div class="image-section" style="display:none;">
+            <div class="img-preview">
+                <div id="imagePreview"></div>
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary btn-lg" id="btn-predict">Predict!</button>
+            </div>
+            <div class="loader" style="display:none;">
             </div>
         </div>
-        <div>
-            <button type="button" class="btn btn-primary btn-lg " id="btn-predict">Predict!</button>
+    </div>
+    <div class="columnRight">
+        <div id="result" class="table">
         </div>
     </div>
-
-    <div class="loader" style="display:none;"></div>
-
-        <div id="result" class="table">
-            <span> </span>
-        </div>
-
 </div>
 
 {% endblock %}
