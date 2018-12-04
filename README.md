@@ -7,9 +7,10 @@ User Scenario:
 3. user sees a table of image classifications by different pretrained models
 
 # Prerequisites:
-- Keras
-- Tensorflow
-- Flask
+- Keras 2.2.4 (not 2.2.2)
+- Keras Applications 1.0.6
+- Tensorflow 1.12
+- Flask 1.0.2
 
 # Models:
 - VGG16
