@@ -48,6 +48,22 @@ def show_index():
     print('*** entered homepage')
     return render_template('index.html')
 
+def preprocess_image(image_path, image_size, preprocess_function):
+
+    # load image from path
+    image_input = image.load_img(image_path, target_size=(image_size, image_size))
+
+    # read image input
+    img = image.img_to_array(image_input)
+
+    # reshape data for the model
+    img = np.expand_dims(img, axis=0)
+
+    # prepare the image for the models
+    img = preprocess_function(img)
+    print("image preprocessed")
+
+    return img
 
 def predict_image(image_path, model_label, model_dict) -> str:
     tic = time()
@@ -64,17 +80,8 @@ def predict_image(image_path, model_label, model_dict) -> str:
     model = model_dict['model_instance']
     model_name = model.name
 
-    image_input = image.load_img(image_path, target_size=(image_size, image_size))
-
-    # read image input
-    img = image.img_to_array(image_input)
-
-    # reshape data for the model
-    img = np.expand_dims(img, axis=0)
-
-    # prepare the image for the models
-    img = model_preprocess_input(img)
-    print("image preprocessed")
+    # preprocess image
+    img = preprocess_image(image_path, image_size, model_preprocess_input)
 
     # predict the probability across all output classes
     predictions = model.predict(img)
